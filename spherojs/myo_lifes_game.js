@@ -8,33 +8,33 @@ var sphero = require("./spherojs"),
 
 orb.connect(function() {
   var heading = 0,
-      colorGrad = 51;
-      lifes = 5;
+      totalLifes = 5;
   
-  orb.color(colorGradtoHex(colorGrad, lifes));
+  if (totalLifes = process.argv[2]) {
+    console.log(totalLifes)
+  }
+  var lifes = totalLifes,
+      lifeColor = colorGradtoHex(totalLifes, lifes);
+
+  orb.color(lifeColor);
   orb.detectCollisions();
 
   myo.stdout.on('data', function (data) {
     var pose =  data.toString().substring(0,4),
         stop = orb.roll.bind(orb, 0, heading),
-        roll = orb.roll.bind(orb, 100);
+        roll = orb.roll.bind(orb, 80);
 
     if (pose === "OPEN") {
-     
       roll(heading);
     } else if (pose == "FIST") {
-      
       stop();
     } else if (pose == "WAVI") {
       heading = calculateDegree(heading, 310);
-      
       roll(heading);
     } else if (pose == "WAVO") {
       heading = calculateDegree(heading, 50);
-      
       roll(heading);
     } else if (pose == "PINK") {
-      
       heading = calculateDegree(heading, 180);
       roll(heading);
     }
@@ -52,8 +52,15 @@ orb.connect(function() {
 
     orb.color("red");
 
+    lifes--;
+    if (lifes < 0) {
+      process.stdin.pause();
+      process.exit();
+    }
+
+    lifeColor = colorGradtoHex(totalLifes, lifes);
     setTimeout(function() {
-      orb.color("000000");
+      orb.color(lifeColor);
     }, 100);
   });
 });
@@ -70,14 +77,14 @@ function calculateDegree(heading, change) {
   return newDegree;
 }
 
-function colorGradtoHex(colorGrad, lifes) {
+function colorGradtoHex(totalLifes, lifes) {
   var red = 0,
       green = 0,
       blue = 0,
       hex = 0;
 
-  red = (5 - lifes) * colorGrad;
-  green = lifes * colorGrad;
+  red = (5 - lifes) * (255 / totalLifes);
+  green = lifes * (255 / totalLifes);
   hex = red * 65536 + green * 256;
   return hex;
 }

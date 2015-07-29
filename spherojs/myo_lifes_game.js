@@ -1,5 +1,6 @@
 "use strict";
 
+// connects to the myo script, make sure the path is correct
 var spawn = require('child_process').spawn,
     myo = spawn('python3',['-u', './myo-raw/myo.py']);
 
@@ -10,6 +11,7 @@ orb.connect(function() {
   var heading = 0,
       totalLifes = 5;
   
+  // user can call script with a second argument to set the number of lifes
   if (totalLifes = process.argv[2]) {
     console.log(totalLifes)
   }
@@ -57,7 +59,7 @@ orb.connect(function() {
       process.stdin.pause();
       process.exit();
     }
-
+    // set sphero to the new color
     lifeColor = colorGradtoHex(totalLifes, lifes);
     setTimeout(function() {
       orb.color(lifeColor);

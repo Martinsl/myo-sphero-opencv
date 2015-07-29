@@ -31,10 +31,10 @@ while(1):
     v = cv2.getTrackbarPos('v','result')
 
     # Normal masking algorithm
-    lower_blue = np.array([h,s,v])
-    upper_blue = np.array([180,255,255])
+    lower = np.array([h,s,v])
+    upper = np.array([180,255,255])
 
-    mask = cv2.inRange(hsv,lower_blue, upper_blue)
+    mask = cv2.inRange(hsv,lower, upper)
 
     result = cv2.bitwise_and(frame,frame,mask = mask)
 

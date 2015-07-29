@@ -104,6 +104,7 @@ if __name__ == '__main__':
     ltime = time.time() #Set initial lasttime for further timeout
     timeout = 1 #Timeout in seconds
 
+    # change these to match the poses you trained
     def page(pose):
         if pose == 0:
         	print("REST")

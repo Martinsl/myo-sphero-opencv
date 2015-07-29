@@ -1,8 +1,10 @@
 "use strict";
 
+// connects to the myo script, make sure the path is correct
 var spawn = require('child_process').spawn,
     myo = spawn('python3',['-u', './myo-raw/myo.py']);
 
+// create sphero obj
 var sphero = require("./spherojs"),
     orb = sphero("/dev/rfcomm0");
 

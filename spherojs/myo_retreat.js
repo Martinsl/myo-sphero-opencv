@@ -4,7 +4,8 @@
 var spawn = require('child_process').spawn,
     myo = spawn('python3',['-u', './myo-raw/myo.py']);
 
-// create sphero obj
+// make sure the spherojs lib path is correct, you can use just spherojs
+// if it was installed with npm
 var sphero = require("./spherojs"),
     orb = sphero("/dev/rfcomm0");
 

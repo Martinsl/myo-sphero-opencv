@@ -3,11 +3,12 @@ import cv2
 
 class App(object):
     def __init__(self, video_src):
+        # reads from camera
         self.cam = cv2.VideoCapture(0)
+
         ret, self.frame = self.cam.read()
         cv2.namedWindow('frame')
 
-        self.selection = None
         self.circle = None
         self.tracking_state = 0
         self.show_backproj = False
@@ -46,8 +47,11 @@ class App(object):
 
     def run(self):
         while True:
+            # reads camera feed
             ret, self.frame = self.cam.read()
             vis = self.frame.copy()
+
+            # transform to HSV
             self.hsv = cv2.cvtColor(self.frame, cv2.COLOR_BGR2HSV)
 
             # define range of white color in HSV
@@ -57,14 +61,15 @@ class App(object):
 
             self.mask = cv2.medianBlur(self.mask, 3)
 
+            # creates histogram to use on meanShift function
             if self.circle != None:
-                # retrieve circle data
+                # retrieve circle data, x and y are the central position
                 x_circle, y_circle, r = self.circle
 
                 # modify circle data to create a rectangle
                 x0, y0, x1, y1 = x_circle-r, y_circle-r, x_circle+r, y_circle+r
 
-                # create track window data as x, y, w, h
+                # create track rectangle data as x, y, w, h
                 self.track_window = (x0, y0, 2*r, 2*r)
 
                 hsv_roi = self.hsv[y0:y1, x0:x1]
@@ -77,12 +82,11 @@ class App(object):
                 vis_roi = vis[y0:y1, x0:x1]
 
                 cv2.bitwise_not(vis_roi, vis_roi)
-                #vis[self.mask == 0] = 0
+                vis[self.mask == 0] = 0
 
                 self.circle = None
 
             if self.tracking_state == 1:
-                self.selection = None
                 prob = cv2.calcBackProject([self.hsv], [0], self.hist, [0, 180], 1)
                 prob &= self.mask
                 term_crit = ( cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 1 )
@@ -90,7 +94,11 @@ class App(object):
                 ret, self.track_window = cv2.meanShift(prob, self.track_window, term_crit)
 
                 x, y, w, h = self.track_window
+
+                # draws rectangle on tracking area
                 vis = cv2.rectangle(vis, (x,y), (x+w,y+h), 255,2)
+
+                # checks if is tracking a circle
                 self.hasCircle(self.mask, x, y, w ,h)
             else:
                 self.search(self.mask)
@@ -100,7 +108,6 @@ class App(object):
             elif self.confidence > 0.6:
                 self.tracking_state = 1
 
-            print self.confidence
             
             cv2.imshow('hsv', self.hsv)
             cv2.imshow('frame', vis)

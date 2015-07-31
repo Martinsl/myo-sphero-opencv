@@ -4,10 +4,13 @@
 var spawn = require('child_process').spawn,
     myo = spawn('python3',['-u', './myo-raw/myo.py']);
 
+// make sure the spherojs lib path is correct, you can use just spherojs
+// if you installed it with npm
 var sphero = require("./spherojs"),
     orb = sphero("/dev/rfcomm0");
 
 orb.connect(function() {
+  // heading will determine the sphero direction
   var heading = 0,
       totalLifes = 5;
   
@@ -23,7 +26,9 @@ orb.connect(function() {
 
   myo.stdout.on('data', function (data) {
     var pose =  data.toString().substring(0,4),
+        // uses heading to stop without changing direction
         stop = orb.roll.bind(orb, 0, heading),
+        // binds a velocity to the roll command
         roll = orb.roll.bind(orb, 80);
 
     if (pose === "OPEN") {
@@ -67,6 +72,7 @@ orb.connect(function() {
   });
 });
 
+// keeps angle between 0-359
 function calculateDegree(heading, change) {
   var newDegree = 0;
 

@@ -3,7 +3,10 @@ import cv2
 
 class App(object):
     def __init__(self, video_src):
+
+        # reads from the camera
         self.cam = cv2.VideoCapture(0)
+
         ret, self.frame = self.cam.read()
         cv2.namedWindow('frame')
         cv2.setMouseCallback('frame', self.onmouse)

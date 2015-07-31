@@ -66,10 +66,8 @@ class App(object):
                 # draws circle on image
                 cv2.circle(self.frame, (x0, y0), 10, (0, 255, 0), -1)
                 if x0 != x1:
-                    #print self.sphero
                     self.horizontalMovement()
                 elif y0 != y1:
-                    #print self.sphero
                     self.verticalMovement()
                 #self.sphero = None
                 #self.destination = None

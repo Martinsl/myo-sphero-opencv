@@ -4,16 +4,20 @@
 var spawn = require('child_process').spawn,
     myo = spawn('python3',['-u', './myo-raw/myo.py']);
 
-// create sphero obj
+// make sure the spherojs lib path is correct, you can use just spherojs
+// if it was installed with npm
 var sphero = require("./spherojs"),
     orb = sphero("/dev/rfcomm0");
 
 orb.connect(function() {
+  // heading will determine the sphero direction
   var heading = 0;
 
   myo.stdout.on('data', function (data) {
     var pose =  data.toString().substring(0,4),
+        // uses heading to stop without changing direction
         stop = orb.roll.bind(orb, 0, heading),
+        // binds a velocity to the roll command
         roll = orb.roll.bind(orb, 60);
 
     if (pose === "OPEN") {

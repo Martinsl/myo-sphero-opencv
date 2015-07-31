@@ -12,15 +12,13 @@ class App(object):
         self.circle = None
         self.tracking_state = 0
         self.show_backproj = False
-        self.frame_counter = 0
+
         self.confidence = 0.0
         self.destination = None
         self.sphero = None
 
     def onmouse(self, event, x, y, flags, param):
-        x, y = np.int16([x, y]) # BUG
-        if event == cv2.EVENT_RBUTTONDOWN:
-            self.sphero = x, y
+        x, y = np.int16([x, y])
         if event == cv2.EVENT_LBUTTONDOWN:
             self.destination = x, y
 
@@ -30,11 +28,9 @@ class App(object):
 
         movDiff = x0 - x1;
 
-        if movDiff < -10:
-            self.sphero = x0+2, y0
+        if movDiff < -30:
             print "RIGHT"
-        elif movDiff > 10:
-            self.sphero = x0-2, y0
+        elif movDiff > 30:
             print "LEFT"
         else:
             self.destination = x0, y1
@@ -47,15 +43,13 @@ class App(object):
         movDiff = y0 - y1;
 
         if movDiff >= 15:
-            self.sphero = x0, y0-2
             print "FORWARD"
         elif movDiff < -15:
-            self.sphero = x0, y0+2
             print "BACK"
         else:
             self.destination = x1, y0
             print "STOP >> VERTICAL"
-            
+   
     def hasCircle(self, mask, x, y, w, h):
 
         # select region of interest
@@ -81,8 +75,6 @@ class App(object):
         if circles is not None:
             circles = np.round(circles[0, :]).astype("int")
             self.circle = circles[0]
-
-            # set tracking to true
             self.tracking_state = 1
             self.confidence = 1
         else:
@@ -90,20 +82,20 @@ class App(object):
 
     def run(self):
         while True:
-            # reads from camera
             ret, self.frame = self.cam.read()
             vis = self.frame.copy()
-
-            # transform to HSV
             self.hsv = cv2.cvtColor(self.frame, cv2.COLOR_BGR2HSV)
 
             # define range of white color in HSV
-            lower_white = np.array([0,0,220], dtype=np.uint8)
-            upper_white = np.array([0,0,255], dtype=np.uint8)
+            lower_white = np.array([80,0,220], dtype=np.uint8)
+            upper_white = np.array([180,255,255], dtype=np.uint8)
             self.mask = cv2.inRange(self.hsv, lower_white, upper_white)
 
-            self.mask = cv2.medianBlur(self.mask, 3)
+            # these should be commented to allow tracking in a longer distance
+            self.mask = cv2.GaussianBlur(self.mask, (5,5),0)
+            self.mask = cv2.medianBlur(self.mask, 7)
 
+            # creates histogram for the meanSearch
             if self.circle != None:
                 # retrieve circle data
                 x_circle, y_circle, r = self.circle
@@ -112,13 +104,11 @@ class App(object):
                 x0, y0, x1, y1 = x_circle-r, y_circle-r, x_circle+r, y_circle+r
 
                 # create track window data as x, y, w, h
-                self.track_window = (x0-r, y0-r, r, r)
+                self.track_window = (x0-r, y0-r, r*2, r*2)
 
-                # set regions of interest
                 hsv_roi = self.hsv[y0:y1, x0:x1]
                 self.mask_roi = self.mask[y0:y1, x0:x1]
 
-                # creates histogram
                 roi_hist = cv2.calcHist([self.hsv],[0],self.mask,[16],[0,180])
                 cv2.normalize(roi_hist,roi_hist,0,255,cv2.NORM_MINMAX)
                 self.hist = roi_hist.reshape(-1)
@@ -139,12 +129,8 @@ class App(object):
                 ret, self.track_window = cv2.meanShift(prob, self.track_window, term_crit)
 
                 x, y, w, h = self.track_window
-
-                # draws rectangle
-                vis = cv2.rectangle(vis, (x,y), (x+w,y+h), 255,2)
+                vis = cv2.rectangle(vis, (x,y), (x+w, y+h), 255,2)
                 self.hasCircle(self.mask, x, y, w ,h)
-
-                # sets sphero position
                 self.sphero = x+w/2, y+w/2
             else:
                 self.sphero = None
@@ -158,8 +144,10 @@ class App(object):
             if self.sphero != None and self.destination != None:
                 x0, y0 = self.sphero
                 x1, y1 = self.destination
+                cv2.circle(self.frame, (x0, y0), 10, (0, 255, 0), -1)
+                # TODO: find a way to test if it is within a
+                # certain range near the destination
                 if x0 != x1:
-                    #print self.sphero
                     self.horizontalMovement()
                 elif y0 != y1:
                     #print self.sphero
@@ -167,24 +155,22 @@ class App(object):
                 else:
                     self.destination = None
 
-            #print self.confidence
-
-            # show images
-
             cv2.imshow('frame', vis)
             cv2.imshow('mask', self.mask)
-            #cv2.imshow('hsv', self.hsv)
 
             ch = 0xFF & cv2.waitKey(5)
             if ch == 27:
                 break
             if ch == ord('b'):
                 self.show_backproj = not self.show_backproj
-
             # change tracking area
             if ch == ord('c'):
                 self.tracking_state = 0
                 self.confidence = 0
+                self.destination = None
+            if ch == ord('s'):
+                self.destination = None
+                print("STOP")
 
         cv2.destroyAllWindows()
 

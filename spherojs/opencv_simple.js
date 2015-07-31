@@ -1,5 +1,5 @@
 var spawn = require('child_process').spawn,
-    myo = spawn('python',['-u', './my_spheroSimple.py']);
+    myo = spawn('python',['-u', '../opencv/spheroSimple.py']);
 
 var sphero = require("./spherojs"),
     orb = sphero("/dev/rfcomm0");

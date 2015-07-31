@@ -36,7 +36,8 @@ orb.connect(function() {
   });
 });
 
-function calculateDegree(heading, change) {
+
+function calculateDegree(heading, change) { // Keeps angle between 0-359
   var newDegree = heading+change;
 
   if (newDegree >= 360) {
